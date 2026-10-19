@@ -1,9 +1,10 @@
 {
-	"id": "/",
-    "name": "Hexfriend",
-    "short_name": "Hexfriend",
-    "description": "The friendly online hex mapper :)",
-    "start_url": "/",
+	"id": "/hexfriend-play/",
+    "name": "Hexfriend Play",
+    "short_name": "Hexfriend Play",
+    "description": "Live TTRPG hex maps with fog of war and peer sync",
+    "start_url": "/hexfriend-play/",
+    "scope": "/hexfriend-play/",
     "icons": [
        {
         "src": "assets/img/site/hexfriend.png",
