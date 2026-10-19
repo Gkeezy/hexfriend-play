@@ -5,6 +5,9 @@
   import { Tools } from '../types/toolData'
   import { afterUpdate, onMount, tick } from 'svelte'
   import { data_path, data_icon, data_overlay, data_terrain, data_eraser } from '../stores/data'
+  import { data_fog } from '../stores/fog'
+  import { store_session } from '../stores/session'
+  import { asset } from '../lib/base'
   import { store_selected_tool } from '../stores/tools'
   import { loading_texture } from '../stores'
 
@@ -32,11 +35,15 @@
   let data_eraser_proxy: eraser_data
   data_eraser.subscribe((n) => { data_eraser_proxy = n })
 
+  let data_fog_proxy = { usingEraser: false, usingPaintbucket: false }
+  data_fog.subscribe((n) => { data_fog_proxy = n })
+
   $: {
     data_terrain_proxy = data_terrain_proxy
     data_path_proxy = data_path_proxy
     data_icon_proxy = data_icon_proxy
     data_eraser_proxy = data_eraser_proxy
+    data_fog_proxy = data_fog_proxy
 
     buttons = buttons
   }
@@ -202,6 +209,36 @@
       toolCode: Tools.OVERLAY,
       miniButtons: [],
     },
+    {
+      display: 'Fog',
+      toolCode: Tools.FOG,
+      miniButtons: [
+        {
+          display: 'Fog paintbucket',
+          action: function () {
+            data_fog.update((n) => {
+              n.usingPaintbucket = !n.usingPaintbucket
+              return n
+            })
+          },
+          image: '/assets/img/tools/paintbucket.svg',
+          obj: data_fog_proxy,
+          field: 'usingPaintbucket',
+        },
+        {
+          display: 'Fog hide brush',
+          action: function () {
+            data_fog.update((n) => {
+              n.usingEraser = !n.usingEraser
+              return n
+            })
+          },
+          image: '/assets/img/tools/mini_eraser.svg',
+          obj: data_fog_proxy,
+          field: 'usingEraser',
+        },
+      ],
+    },
   ]
 
   export let changeTool: Function
@@ -225,7 +262,7 @@
   })
 </script>
 
-<main>
+<main class:player-hidden={$store_session.readOnly}>
   {#each buttons as b}
     {#if b.miniButtons.length > 0}
       <div class="mini-button-container" class:risen={b.toolCode == $store_selected_tool}>
@@ -236,7 +273,7 @@
             on:click={mb.action}
             title={mb.display}
           >
-            <span class="mini-button-bg" style="-webkit-mask: url({mb.image})" />
+            <span class="mini-button-bg" style="-webkit-mask: url({asset(mb.image.replace(/^\//, ""))})" />
           </button>
         {/each}
       </div>
@@ -257,7 +294,7 @@
           class="tool-icon"
           class:rotated90={(b.toolCode == Tools.TERRAIN || b.toolCode == Tools.OVERLAY) &&
             $tfield.orientation == HexOrientation.POINTYTOP}
-          style={`-webkit-mask: url(/assets/img/tools/${b.toolCode}.svg) no-repeat center`}
+          style={`-webkit-mask: url(${asset('assets/img/tools/' + b.toolCode + '.svg')}) no-repeat center`}
         />
       </button>
     {/each}
@@ -279,7 +316,7 @@
           class="tool-icon"
           class:rotated90={(b.toolCode == Tools.TERRAIN || b.toolCode == Tools.OVERLAY) &&
             $tfield.orientation == HexOrientation.POINTYTOP}
-          style={`-webkit-mask: url(/assets/img/tools/${b.toolCode}.svg) no-repeat center`}
+          style={`-webkit-mask: url(${asset('assets/img/tools/' + b.toolCode + '.svg')}) no-repeat center`}
         />
       </button>
     {/each}
@@ -292,6 +329,9 @@
     position: relative;
     display: flex;
     justify-content: center;
+  }
+  main.player-hidden {
+    display: none;
   }
 
   div.layer {

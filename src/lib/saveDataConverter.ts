@@ -286,6 +286,16 @@ const convert_v13_to_v14 = (oldData: SaveData): SaveData => {
   return oldData
 }
 
+
+const convert_v14_to_v15 = (oldData: SaveData): SaveData => {
+  console.log('Converting save: v14 to v15 (fog of war)')
+  if (!oldData.fog) {
+    oldData.fog = { enabled: false, revealed: {} }
+  }
+  oldData.saveVersion = 15
+  return oldData
+}
+
 export const makeEfficient = (save_data: SaveData) => {
 
   for (const [hexId, terrainHex] of Object.entries(save_data.TerrainField.hexes)) {
@@ -329,6 +339,9 @@ export function convertSaveDataToLatest(oldData: SaveData): SaveData {
   }
   if (newData.saveVersion == 13) {
     newData = convert_v13_to_v14(newData)
+  }
+  if (newData.saveVersion == 14) {
+    newData = convert_v14_to_v15(newData)
   }
 
   makeEfficient(newData)

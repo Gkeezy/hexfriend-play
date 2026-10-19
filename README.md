@@ -1,3 +1,13 @@
+# Hexfriend Play
+
+**Live TTRPG fork** of [Hexfriend](https://github.com/Aidymouse/Hexfriend) with fog of war and peer-to-peer map sync.
+
+- **Live app (this fork):** https://gkeezy.github.io/hexfriend-play/
+- **Upstream:** https://hexfriend.net/ / https://github.com/Aidymouse/Hexfriend
+- **How to play:** see [PLAY.md](./PLAY.md)
+
+---
+
 # Hexfriend
 
 A friendly online hexmapper - you can find it at https://www.hexfriend.net

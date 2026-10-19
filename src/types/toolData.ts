@@ -6,7 +6,8 @@ export enum Tools {
 	PATH = 'path',
 	TEXT = 'text',
 	ERASER = 'eraser',
-	OVERLAY = 'overlay'
+	OVERLAY = 'overlay',
+	FOG = 'fog'
 }
 
 export type HexId = `${number}:${number}:${number}`;

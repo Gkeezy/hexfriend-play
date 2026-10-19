@@ -43,6 +43,7 @@
   import PathLayer from './layers/PathLayer.svelte'
   import TerrainLayer from './layers/TerrainLayer.svelte'
   import TextLayer from './layers/TextLayer.svelte'
+  import FogLayer from './layers/FogLayer.svelte'
   import { db } from './lib/db'
 
   // Data
@@ -65,6 +66,8 @@
   import TerrainPanel from './panels/TerrainPanel.svelte'
   import TextPanel from './panels/TextPanel.svelte'
   import EraserPanel from './panels/EraserPanel.svelte'
+  import FogPanel from './panels/FogPanel.svelte'
+  import SessionBar from './components/SessionBar.svelte'
 
   // Stores
   import * as store_panning from './stores/panning'
@@ -109,6 +112,14 @@
   import { convert_iconset_to_latest } from './lib/iconsetConverter'
 
   import { store_loaded_save, store_undo } from './stores'
+  import { store_session } from './stores/session'
+  import {
+    initSync,
+    markDirty,
+    getJoinCodeFromLocation,
+    startPlayer,
+    type MapDelta,
+  } from './lib/sessionSync'
   /* STATE */
 
   let dataToLoad = {
@@ -147,6 +158,7 @@
   let comp_textLayer: TextLayer
   let comp_coordsLayer: CoordsLayer
   let comp_overlayLayer: OverlayLayer
+  let comp_fogLayer: FogLayer
   let comp_shortcutList: ShortcutList
 
   let comp_terrain_panel: TerrainPanel
@@ -162,6 +174,7 @@
   let cont_coordinates = new PIXI.Container()
   let cont_largehexes = new PIXI.Container()
   let cont_overlay = new PIXI.Container()
+  let cont_fog = new PIXI.Container()
 
   /* APPLICATION */
   let app = new PIXI.Application({
@@ -255,7 +268,74 @@
   function redrawEntireMap() {
     // Refreshes all hexes and coordinates
     comp_terrainLayer.renderAllHexes()
+    comp_fogLayer?.renderAll()
   }
+
+  function notifySync() {
+    markDirty()
+  }
+
+  function buildDelta(): MapDelta {
+    return {
+      fog: loadedSave.fog ?? { enabled: false, revealed: {} },
+      TerrainField: $tfield,
+      paths: loadedSave.paths,
+      icons: loadedSave.icons,
+      texts: loadedSave.texts,
+      coords: loadedSave.coords,
+      overlay: loadedSave.overlay,
+      title: loadedSave.title,
+    }
+  }
+
+  function applyDelta(delta: MapDelta) {
+    if (!loadedSave) return
+    loadedSave.fog = delta.fog
+    loadedSave.paths = delta.paths
+    loadedSave.icons = delta.icons
+    loadedSave.texts = delta.texts
+    loadedSave.coords = delta.coords
+    loadedSave.overlay = delta.overlay
+    loadedSave.title = delta.title
+    $tfield = delta.TerrainField
+    $data_coordinates = delta.coords
+    $data_overlay = delta.overlay
+    loadedSave = loadedSave
+    tick().then(() => {
+      comp_terrainLayer?.renderAllHexes()
+      comp_fogLayer?.renderAll()
+      // Force dependent layers to refresh by reassigning bound arrays
+      loadedSave.paths = [...delta.paths]
+      loadedSave.icons = [...delta.icons]
+      loadedSave.texts = [...delta.texts]
+      loadedSave = loadedSave
+    })
+  }
+
+  function ensureFogForPlay() {
+    if (!loadedSave.fog) loadedSave.fog = { enabled: true, revealed: {} }
+    else loadedSave.fog.enabled = true
+    loadedSave = loadedSave
+    comp_fogLayer?.renderAll()
+  }
+
+  let playerInitialLoadDone = false
+
+  function onRemoteFull(save: SaveData) {
+    playerInitialLoadDone = true
+    load_map(save, null)
+    // After load, fog layer remounts; ensure opaque fog for players
+    store_session.update((s) => ({ ...s, readOnly: true, fogOpaque: true, role: 'player' }))
+  }
+
+  function onRemoteDelta(delta: MapDelta) {
+    if (!playerInitialLoadDone && loadedSave) {
+      applyDelta(delta)
+      return
+    }
+    applyDelta(delta)
+  }
+
 
   /* TOOL METHODS */
   /** TODO: refactor this into seperate tool store subscribes in respective layers */
@@ -308,6 +388,8 @@
     if ($store_inputs.mouseDown[2]) store_panning.handlers.startPan(e)
 
     if ($store_inputs.mouseDown[0]) {
+      // PLAYER_READONLY_GUARD: players may only pan/zoom
+      if ($store_session.readOnly) return
       switch ($store_selected_tool) {
         case Tools.TERRAIN:
           comp_terrainLayer.pointerdown()
@@ -332,6 +414,10 @@
           }
           /* Icons are handled in the IconLayer */
           break
+
+        case Tools.FOG:
+          if (!$store_session.readOnly) comp_fogLayer.pointerdown()
+          break
       }
     }
   }
@@ -346,14 +432,21 @@
     switch ($store_selected_tool) {
       case Tools.TERRAIN:
 	comp_terrainLayer.pointerup()
+        notifySync()
 	break
 
       case Tools.ICON:
         comp_iconLayer.pointerup()
+        notifySync()
         break
 
       case Tools.TEXT:
         comp_textLayer.pointerup()
+        notifySync()
+        break
+
+      case Tools.PATH:
+        notifySync()
         break
 
       case Tools.OVERLAY:
@@ -362,8 +455,13 @@
 
       case Tools.ERASER: {
 	stopUsingEraser()
+        notifySync()
 	break
       }
+
+      case Tools.FOG:
+        notifySync()
+        break
     }
   }
 
@@ -392,6 +490,10 @@
 
       case Tools.OVERLAY:
         comp_overlayLayer.pointermove()
+        break
+
+      case Tools.FOG:
+        if ($store_inputs.mouseDown[0] && !$store_session.readOnly) comp_fogLayer.pointerdown()
         break
     }
   }
@@ -826,6 +928,9 @@
     // Jolt all the layers that respond to the data into place. Without this the text, icons and paths kinda get stuck. It's odd. Warrants further investigation.
     loadedSave = loadedSave
 
+    tick().then(() => {
+      comp_fogLayer?.renderAll()
+    })
     console.log('Loaded, ready')
   }
 
@@ -872,6 +977,7 @@
   offsetContainer.addChild(cont_largehexes)
   offsetContainer.addChild(cont_all_text)
   offsetContainer.addChild(cont_overlay)
+  offsetContainer.addChild(cont_fog)
 
   app.stage.addChild(offsetContainer)
 
@@ -886,15 +992,29 @@
 
   onMount(() => {
     console.log('App Mounted')
-    createNewMap()
-    //load_map(dataToLoad.data, dataToLoad.id)
+    initSync(
+      { onFull: onRemoteFull, onDelta: onRemoteDelta },
+      () => loadedSave,
+      () => buildDelta(),
+    )
+    const joinCode = getJoinCodeFromLocation()
+    if (joinCode) {
+      createNewMap()
+      startPlayer(joinCode).catch((e) => {
+        console.error(e)
+        alert(`Could not join session ${joinCode}: ${e}`)
+      })
+    } else {
+      createNewMap()
+    }
   })
 </script>
 
 <svelte:window on:keydown={keyDown} on:keyup|preventDefault={keyUp} on:blur={blur} on:beforeunload={before_unload} />
 
 {#if appState == app_state.NORMAL}
-  <main id="content-arranger">
+  <SessionBar onHostStarted={notifySync} {ensureFogForPlay} />
+  <main id="content-arranger" class:player-view={$store_session.readOnly}>
     {#if saving}
       <div id="save-indicator">
         <img src="../assets/img/site/hexfriend.png" alt={'Saving...'} />
@@ -935,6 +1055,7 @@
       <LargeHexesLayer bind:cont_largehexes />
       <TextLayer bind:cont_all_text bind:this={comp_textLayer} bind:texts={loadedSave.texts} />
       <OverlayLayer bind:this={comp_overlayLayer} bind:cont_overlay bind:loaded_base64={loadedSave.overlay_base64} />
+      <FogLayer bind:this={comp_fogLayer} bind:cont_fog bind:loaded_save={loadedSave} onFogChanged={notifySync} />
     </section>
 
     <!-- Panels -->
@@ -954,6 +1075,8 @@
       <EraserPanel bind:loaded_save={loadedSave} />
     {:else if $store_selected_tool == Tools.OVERLAY}
       <OverlayPanel {comp_overlayLayer} loaded_base64={loadedSave.overlay_base64} />
+    {:else if $store_selected_tool == Tools.FOG}
+      <FogPanel bind:loaded_save={loadedSave} {comp_fogLayer} onFogChanged={notifySync} />
     {/if}
 
       <PathPanel show={$store_selected_tool === Tools.PATH} bind:this={comp_path_panel} {comp_pathLayer} bind:loaded_path_styles={loadedSave.path_styles} />
@@ -1367,5 +1490,11 @@
   #help-overlay #shortcuts {
     bottom: 0;
     right: 0;
+  }
+
+  main.player-view #tool-buttons,
+  main.player-view #setting-buttons,
+  main.player-view #help-buttons {
+    display: none !important;
   }
 </style>

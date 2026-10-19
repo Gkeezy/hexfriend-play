@@ -4,8 +4,9 @@ import type { ListedPathStyle, PathLayerPath, PathStyle } from './path'
 import type { TerrainField } from './terrain'
 import type { ListedTextStyle, TextLayerText } from './text'
 import type { Tileset } from './tilesets'
+import type { FogData } from './fog'
 
-const LATESTSAVEDATAVERSION = 14
+const LATESTSAVEDATAVERSION = 15
 const LATEST_DEFAULT_ICONS_VERSION = 5
 
 export type SaveData = {
@@ -29,6 +30,9 @@ export type SaveData = {
 
   path_styles: ListedPathStyle[]
   text_styles: ListedTextStyle[]
+
+  /** Fog of war (Hexfriend-Play). Optional on old saves; converter adds default. */
+  fog: FogData
 }
 
 export { LATEST_DEFAULT_ICONS_VERSION, LATESTSAVEDATAVERSION }

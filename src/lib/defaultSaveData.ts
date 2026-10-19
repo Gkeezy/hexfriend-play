@@ -282,6 +282,11 @@ let DEFAULTSAVEDATA: SaveData = {
       id: 6,
     },
   ],
+
+  fog: {
+    enabled: false,
+    revealed: {},
+  },
 }
 
 //console.log(JSON.stringify(DEFAULTSAVEDATA.tilesets['default']))

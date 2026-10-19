@@ -1,20 +1,20 @@
 import * as ghpages from 'gh-pages';
 
 ghpages.publish(
-	'dist', // path to public directory
+	'dist',
 	{
 		branch: 'gh-pages',
-		//repo: 'https://github.com/Aidymouse/Hexfriend.git', // Update to point to your repository
-		repo: 'git@github.com:Aidymouse/Hexfriend.git', // Update to point to your repository
+		repo: 'https://github.com/Gkeezy/hexfriend-play.git',
 		user: {
-			name: 'Aidymouse', // update to use your name
-			email: 'aidan@thewizardscat.co.nz', // Update to use your email
+			name: 'Gkeezy',
+			email: 'gkeezy@users.noreply.github.com',
 		},
-		message: 'GH Pages Script',
+		message: 'Deploy Hexfriend-Play',
 	},
 	(err) => {
 		if (err) {
-			console.log(err);
+			console.error(err);
+			process.exit(1);
 		} else {
 			console.log('Deploy Complete!');
 		}
