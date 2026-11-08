@@ -14,6 +14,7 @@ dist-ssr
 
 # I build typescript here
 build
+build-test
 
 # Editor directories and files
 .vscode/*

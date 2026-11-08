@@ -1,14 +1,15 @@
 {
   "name": "hexfriend-play",
   "private": true,
-  "version": "4.2.0-play",
+  "version": "4.2.1-play",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.json",
-    "deploy": "node ./gh-pages.js"
+    "deploy": "node ./gh-pages.js",
+    "test": "esbuild src/lib/sessionState.test.ts --bundle --platform=node --format=esm --outfile=build-test/sessionState.test.mjs && node build-test/sessionState.test.mjs"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^2.0.4",

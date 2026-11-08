@@ -40,6 +40,7 @@
   import SavedMaps from './SavedMaps.svelte'
   import { startUndoState, completeUndoState } from '../lib/undoManager'
   import { rand } from '../helpers'
+  import { parseSessionFile } from '../lib/sessionState'
 
   export let loadedSave: SaveData
   export let showSettings: boolean
@@ -167,9 +168,12 @@
     let r = new FileReader()
     r.readAsText(mapImportFiles[0])
     r.onload = (eb) => {
-      let saveData = JSON.parse(eb.target.result as string)
-      //console.log(saveData)
-      load(saveData, null)
+      try {
+        const saveData = parseSessionFile(eb.target.result as string)
+        load(saveData, null)
+      } catch (e) {
+        alert(`Could not import map: ${e}`)
+      }
     }
   }
 

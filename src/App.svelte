@@ -116,10 +116,19 @@
   import {
     initSync,
     markDirty,
+    sendFullNow,
     getJoinCodeFromLocation,
     startPlayer,
     type MapDelta,
   } from './lib/sessionSync'
+  import {
+    canUseSessionFiles,
+    parseSessionFile,
+    prepareSessionSave,
+    sanitizeFog,
+    sessionFilename,
+    shouldPushFullSnapshotAfterLoad,
+  } from './lib/sessionState'
   /* STATE */
 
   let dataToLoad = {
@@ -255,8 +264,8 @@
 
       case Map_Exports.JSON:
         download(
-          JSON.stringify(loadedSave),
-          `${loadedSave.title ? loadedSave.title : 'Untitled Hexfriend'}.hexfriend`,
+          JSON.stringify(prepareSessionSave(loadedSave, $tfield)),
+          sessionFilename(loadedSave),
           'application/json',
         )
         break
@@ -317,6 +326,30 @@
     else loadedSave.fog.enabled = true
     loadedSave = loadedSave
     comp_fogLayer?.renderAll()
+  }
+
+  function saveSessionFile() {
+    if (!canUseSessionFiles($store_session.role, $store_session.readOnly) || !loadedSave) return
+    const snapshot = prepareSessionSave(loadedSave, $tfield)
+    download(JSON.stringify(snapshot), sessionFilename(snapshot), 'application/json')
+  }
+
+  async function loadSessionFile(file: File) {
+    if (!canUseSessionFiles($store_session.role, $store_session.readOnly)) {
+      alert('Leave the player view before loading a session file. This keeps the hosted map from replacing or saving over your own maps.')
+      return
+    }
+    const ok = confirm(
+      `Load session file "${file.name}"? The map on screen will be replaced. Browser-saved maps are not overwritten.`,
+    )
+    if (!ok) return
+    try {
+      const data = parseSessionFile(await file.text())
+      // null dexie id: file load never writes over an existing browser slot
+      load_map(data, null)
+    } catch (e) {
+      alert(`Could not load session file: ${e}`)
+    }
   }
 
   let playerInitialLoadDone = false
@@ -534,7 +567,9 @@
       case null:
         switch (shortcutData.function) {
           case 'save':
-            save_map(loadedSave, loadedId)
+            if (canUseSessionFiles($store_session.role, $store_session.readOnly)) {
+              save_map(loadedSave, loadedId)
+            }
             break
 
           case 'undo':
@@ -736,6 +771,11 @@
    * @param save_id - Null if map is new. Can be set to null to force save a new map
    */
   async function save_map(data_to_save: SaveData, save_id: number | null, preview_override: string | null = null) {
+    // Players receive a live copy of the GM map; never write that into the local library.
+    if (!canUseSessionFiles($store_session.role, $store_session.readOnly)) {
+      saving = false
+      return
+    }
     // = asyncExtract(app, offsetContainer)
     if (data_to_save.title === '') {
       let t = prompt('Map Title:')
@@ -754,8 +794,11 @@
 
     data_to_save.tilesets = $store_loaded_save.tilesets
     data_to_save.iconsets = $store_loaded_save.iconsets
+    if ($tfield) data_to_save.TerrainField = $tfield
+    data_to_save.fog = sanitizeFog(data_to_save.fog)
+    const snapshot = prepareSessionSave(data_to_save, $tfield)
 
-    return saveToDexie(data_to_save, save_id, preview_override ?? p)
+    return saveToDexie(snapshot, save_id, preview_override ?? p)
   }
 
   async function asyncExtract(app: PIXI.Application, container: PIXI.Container): Promise<string> {
@@ -930,6 +973,9 @@
 
     tick().then(() => {
       comp_fogLayer?.renderAll()
+      if (shouldPushFullSnapshotAfterLoad($store_session.role)) {
+        sendFullNow()
+      }
     })
     console.log('Loaded, ready')
   }
@@ -1013,7 +1059,7 @@
 <svelte:window on:keydown={keyDown} on:keyup|preventDefault={keyUp} on:blur={blur} on:beforeunload={before_unload} />
 
 {#if appState == app_state.NORMAL}
-  <SessionBar onHostStarted={notifySync} {ensureFogForPlay} />
+  <SessionBar onHostStarted={notifySync} {ensureFogForPlay} onSaveSession={saveSessionFile} onLoadSessionFile={loadSessionFile} />
   <main id="content-arranger" class:player-view={$store_session.readOnly}>
     {#if saving}
       <div id="save-indicator">

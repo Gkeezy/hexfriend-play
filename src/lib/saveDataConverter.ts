@@ -3,6 +3,7 @@ import type { SaveData } from '../types/savedata'
 import { HexRaised } from '../types/terrain'
 import { ScaleMode } from '../helpers/imageSizing'
 import * as PIXI from 'pixi.js'
+import { sanitizeFog } from './sessionState'
 
 /** I better make sure I like these names because they can NEVER CHANGE! Or old save versions will need to know what they used to be */
 function convert_v1_to_v5(oldData: SaveData): SaveData {
@@ -289,9 +290,7 @@ const convert_v13_to_v14 = (oldData: SaveData): SaveData => {
 
 const convert_v14_to_v15 = (oldData: SaveData): SaveData => {
   console.log('Converting save: v14 to v15 (fog of war)')
-  if (!oldData.fog) {
-    oldData.fog = { enabled: false, revealed: {} }
-  }
+  oldData.fog = sanitizeFog(oldData.fog)
   oldData.saveVersion = 15
   return oldData
 }
@@ -343,6 +342,9 @@ export function convertSaveDataToLatest(oldData: SaveData): SaveData {
   if (newData.saveVersion == 14) {
     newData = convert_v14_to_v15(newData)
   }
+
+  // Always sanitize fog so v15+ files with missing/malformed fog stay safe
+  newData.fog = sanitizeFog(newData.fog)
 
   makeEfficient(newData)
 

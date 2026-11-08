@@ -4,6 +4,21 @@
 
   export let onHostStarted: () => void = () => {}
   export let ensureFogForPlay: () => void = () => {}
+  export let onSaveSession: () => void = () => {}
+  export let onLoadSessionFile: (file: File) => void = () => {}
+
+  let loadInput: HTMLInputElement
+
+  function openLoadPicker() {
+    loadInput?.click()
+  }
+
+  function handleLoadFile(e: Event) {
+    const input = e.currentTarget as HTMLInputElement
+    const file = input.files && input.files[0]
+    if (file) onLoadSessionFile(file)
+    input.value = ''
+  }
 
   let joinInput = ''
   let busy = false
@@ -64,6 +79,8 @@
     <button type="button" disabled={busy} on:click={host}>Host (GM)</button>
     <input bind:value={joinInput} placeholder="Join code" maxlength="8" on:keydown={(e) => e.key === 'Enter' && join()} />
     <button type="button" disabled={busy || !joinInput.trim()} on:click={join}>Join</button>
+    <button type="button" class="secondary" on:click={onSaveSession}>Save session</button>
+    <button type="button" class="secondary" on:click={openLoadPicker}>Load session</button>
   {:else if $store_session.role === 'gm'}
     <span class="badge gm">GM</span>
     <span class="status">{$store_session.status} · {$store_session.peerCount} player(s)</span>
@@ -71,6 +88,8 @@
       <code class="code">{$store_session.sessionCode}</code>
       <button type="button" on:click={copyLink}>{copied ? 'Copied!' : 'Copy join link'}</button>
     {/if}
+    <button type="button" class="secondary" on:click={onSaveSession}>Save session</button>
+    <button type="button" class="secondary" on:click={openLoadPicker}>Load session</button>
     <button type="button" disabled={busy} on:click={leave}>End session</button>
   {:else}
     <span class="badge player">Player (view only)</span>
@@ -84,6 +103,13 @@
     <span class="err">{$store_session.error}</span>
   {/if}
   <span class="peer-hint" title={PEER_SERVER_DOCS.note}>P2P via {PEER_SERVER_DOCS.name}</span>
+  <input
+    bind:this={loadInput}
+    type="file"
+    accept=".hexfriend,application/json,.json"
+    class="file-hidden"
+    on:change={handleLoadFile}
+  />
 </div>
 
 <style>
@@ -172,5 +198,13 @@
   }
   .status {
     opacity: 0.85;
+  }
+  button.secondary {
+    background: transparent;
+    color: inherit;
+    border: 1px solid #8cc63f;
+  }
+  .file-hidden {
+    display: none;
   }
 </style>

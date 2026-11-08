@@ -22,6 +22,20 @@ Upstream map editing (terrain, icons, paths, text, settings, import/export) is u
 3. Pan/zoom freely. You cannot edit the map or fog (view-only).
 4. If you disconnect, reopen the same link to reconnect.
 
+
+## Save session / Load session
+
+Fog (which hexes are revealed) is part of the map file. Use the session bar so you do not have to dig through Map Settings:
+
+1. After revealing hexes as the GM (or while mapping solo), click **Save session**.
+2. A `.hexfriend` file downloads — full editable map plus `fog.enabled` and `fog.revealed`. It does **not** include join codes or peer connections.
+3. Next session, click **Load session** and pick that file. The map and fog come back so you can keep editing and click **Host (GM)** again.
+4. If you are already hosting when you load a file, connected players receive the newly loaded map automatically.
+
+You can still use Hexfriend’s built-in browser Save (disk icon) and Settings → Export/Import `.hexfriend`. Those paths now write the same sanitized fog state.
+
+**Player view** hides Save/Load so joining a game cannot overwrite maps in your browser library. Leave the session first if you want to keep your own copy.
+
 ## Fog behaviour
 
 | Role | Unrevealed hexes |
@@ -30,7 +44,7 @@ Upstream map editing (terrain, icons, paths, text, settings, import/export) is u
 | Player | Opaque fog — map underneath is hidden |
 | Solo / fog disabled | No fog drawn (normal Hexfriend mapping) |
 
-Fog state is stored in the `.hexfriend` save (`fog.enabled` + `fog.revealed` hex ids) so it persists across export/import and browser saves.
+Fog state is stored in the `.hexfriend` save (`fog.enabled` + `fog.revealed` hex ids). **Save session** / **Load session** on the top bar is the straightforward way to persist it between game nights; Settings export/import and the browser disk-icon save use the same format.
 
 ## Sync mechanism
 
