@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.json",
     "deploy": "node ./gh-pages.js",
-    "test": "esbuild src/lib/sessionState.test.ts --bundle --platform=node --format=esm --outfile=build-test/sessionState.test.mjs && node build-test/sessionState.test.mjs"
+    "test": "esbuild src/lib/sessionState.test.ts src/lib/toolHotkeys.test.ts --bundle --platform=node --format=esm --outdir=build-test --out-extension:.js=.mjs && node build-test/sessionState.test.mjs && node build-test/toolHotkeys.test.mjs"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^2.0.4",

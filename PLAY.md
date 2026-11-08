@@ -12,7 +12,7 @@ Upstream map editing (terrain, icons, paths, text, settings, import/export) is u
 1. Open the app and load or create your map as usual.
 2. In the top **Play session** bar, click **Host (GM)**. Fog is enabled automatically.
 3. Copy the **join link** (or share the 6-character code) with players.
-4. Select the **Fog** tool (cloud icon). Paint to **reveal** hexes; use the hide brush / eraser mini-button to cover them again. Paintbucket floods contiguous same-state hexes. Panel actions: Reveal all / Hide all.
+4. Select the **Fog** tool (cloud icon, hotkey **6**). Paint to **reveal** hexes; use the hide brush / eraser mini-button to cover them again. Paintbucket floods contiguous same-state hexes. Panel actions: Reveal all / Hide all.
 5. Keep editing terrain and fog as the game runs — connected players receive updates over the peer connection.
 
 ## How players join

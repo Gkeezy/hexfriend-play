@@ -1,5 +1,6 @@
 import type { shortcut_data } from '../types/inputs';
 import { Tools } from '../types/toolData';
+import { OVERLAY_HOTKEY, TOOLBAR_HOTKEYS, toolbarHotkeyAction } from './toolHotkeys';
 
 // Order must be control+shift+alt+{key in lower case}
 
@@ -18,12 +19,13 @@ export let shortcuts: shortcut_data[] = [
 	{ keycode: 'control+/', function: 'toggleShortcutList', tool: null, display: 'View Shortcut List' },
 	{ keycode: 'shift+/', function: 'toggleControls', tool: null, display: 'Toggle Controls' },
 
-	{ keycode: '1', function: 'changeTool_terrain', tool: null, display: 'Terrain Tool' },
-	{ keycode: '2', function: 'changeTool_icon', tool: null, display: 'Icon Tool' },
-	{ keycode: '3', function: 'changeTool_path', tool: null, display: 'Path Tool' },
-	{ keycode: '4', function: 'changeTool_text', tool: null, display: 'Text Tool' },
-	{ keycode: '5', function: 'changeTool_eraser', tool: null, display: 'Eraser Tool' },
-	{ keycode: '6', function: 'changeTool_overlay', tool: null, display: 'Overlay Tool' },
+	...TOOLBAR_HOTKEYS.map((entry) => ({
+		keycode: entry.key,
+		function: toolbarHotkeyAction(entry.tool),
+		tool: null,
+		display: `${entry.tool[0].toUpperCase()}${entry.tool.slice(1)} Tool`,
+	})),
+	{ keycode: String(OVERLAY_HOTKEY), function: 'changeTool_overlay', tool: null, display: 'Overlay Tool' },
 
 	{ keycode: 'control+q', function: 'toggle_overlay', tool: null, display: 'Toggle Overlay Visibility' },
 

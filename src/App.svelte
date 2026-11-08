@@ -639,6 +639,9 @@
           case 'changeTool_eraser':
             changeTool(Tools.ERASER)
             break
+          case 'changeTool_fog':
+            changeTool(Tools.FOG)
+            break
           case 'changeTool_overlay':
             if (loadedSave.overlay_base64 !== null) changeTool(Tools.OVERLAY)
             break

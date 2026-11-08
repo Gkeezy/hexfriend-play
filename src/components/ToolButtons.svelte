@@ -10,6 +10,7 @@
   import { asset } from '../lib/base'
   import { store_selected_tool } from '../stores/tools'
   import { loading_texture } from '../stores'
+  import { toolbarHotkeyFor } from '../lib/toolHotkeys'
 
   import { tfield } from '../stores/tfield'
   import { tl } from '../stores/translation'
@@ -284,7 +285,7 @@
     {#each buttons as b}
       <button
         on:click={() => { changeTool(b.toolCode) }}
-        title={`${b.display} Tool`}
+        title={toolbarHotkeyFor(b.toolCode) ? `${b.display} Tool (${toolbarHotkeyFor(b.toolCode)})` : `${b.display} Tool`}
         class="tool-button"
         class:hidden={b.toolCode == Tools.OVERLAY && !should_render_overlay}
         id={`tool-button-${b.toolCode}`}
@@ -296,6 +297,9 @@
             $tfield.orientation == HexOrientation.POINTYTOP}
           style={`-webkit-mask: url(${asset('assets/img/tools/' + b.toolCode + '.svg')}) no-repeat center`}
         />
+        {#if toolbarHotkeyFor(b.toolCode)}
+          <span class="tool-hotkey">{toolbarHotkeyFor(b.toolCode)}</span>
+        {/if}
       </button>
     {/each}
   </div>
@@ -306,7 +310,7 @@
         on:click={() => {
           changeTool(b.toolCode)
         }}
-        title={`${b.display} Tool`}
+        title={toolbarHotkeyFor(b.toolCode) ? `${b.display} Tool (${toolbarHotkeyFor(b.toolCode)})` : `${b.display} Tool`}
         class="tool-button"
         class:hidden={b.toolCode == Tools.OVERLAY && !should_render_overlay}
         id={`b-tool-button-${b.toolCode}`}
@@ -318,6 +322,9 @@
             $tfield.orientation == HexOrientation.POINTYTOP}
           style={`-webkit-mask: url(${asset('assets/img/tools/' + b.toolCode + '.svg')}) no-repeat center`}
         />
+        {#if toolbarHotkeyFor(b.toolCode)}
+          <span class="tool-hotkey">{toolbarHotkeyFor(b.toolCode)}</span>
+        {/if}
       </button>
     {/each}
   </div>
@@ -373,12 +380,35 @@
 
     outline: none;
     cursor: pointer;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.05em;
   }
 
   .tool-icon {
-    width: 100%;
-    height: 100%;
+    width: 72%;
+    height: 72%;
     transition-duration: 0.2s;
+  }
+
+  .tool-hotkey {
+    font-size: 0.6em;
+    line-height: 1;
+    font-weight: 700;
+    letter-spacing: 0;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  #top-layer .tool-hotkey {
+    color: var(--lightest-background);
+  }
+
+  #bottom-layer .tool-hotkey {
+    color: var(--primary-background);
   }
 
   .rotated90 {
