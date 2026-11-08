@@ -4,6 +4,7 @@ import { HexRaised } from '../types/terrain'
 import { ScaleMode } from '../helpers/imageSizing'
 import * as PIXI from 'pixi.js'
 import { sanitizeFog } from './sessionState'
+import { hydrateSaveColors } from './colorValue'
 
 /** I better make sure I like these names because they can NEVER CHANGE! Or old save versions will need to know what they used to be */
 function convert_v1_to_v5(oldData: SaveData): SaveData {
@@ -347,7 +348,7 @@ export function convertSaveDataToLatest(oldData: SaveData): SaveData {
   newData.fog = sanitizeFog(newData.fog)
 
   makeEfficient(newData)
-
+  hydrateSaveColors(newData)
 
   return newData
 }

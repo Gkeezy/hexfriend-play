@@ -1,3 +1,5 @@
+import { colorReplacer, hydrateSaveColors } from './colorValue'
+
 /** Local structural types so this module stays free of PIXI/Svelte imports (testable in Node). */
 export type FogData = {
   enabled: boolean
@@ -58,11 +60,13 @@ export function isHexfriendSave(data: unknown): data is SaveDataLike {
  */
 export function prepareSessionSave<T extends SaveDataLike>(save: T, terrainField?: TerrainFieldLike): T {
   const source = stripSessionTransport({ ...(save as T & Record<string, unknown>) }) as T
-  const clone = JSON.parse(JSON.stringify(source)) as T
+  // colorReplacer snapshots PIXI.Color instances to numbers *before* JSON loses them
+  const clone = JSON.parse(JSON.stringify(source, colorReplacer)) as T
   if (terrainField) {
-    clone.TerrainField = JSON.parse(JSON.stringify(terrainField))
+    clone.TerrainField = JSON.parse(JSON.stringify(terrainField, colorReplacer))
   }
   clone.fog = sanitizeFog(clone.fog)
+  hydrateSaveColors(clone)
   return clone
 }
 
@@ -78,6 +82,7 @@ export function parseSessionFile(raw: string): SaveDataLike {
   }
   const cleaned = stripSessionTransport(parsed as SaveDataLike & Record<string, unknown>) as SaveDataLike
   cleaned.fog = sanitizeFog(cleaned.fog)
+  hydrateSaveColors(cleaned)
   return cleaned
 }
 

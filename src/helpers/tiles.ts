@@ -1,4 +1,5 @@
 import { get_symbol_texture } from '../lib/texture_loader'
+import { sanitizeColorValue } from '../lib/colorValue'
 import type { Tile, Tileset } from '../types/tilesets'
 
 export function get_tileset_id(tileset: Tileset) {
@@ -34,9 +35,12 @@ export function tiles_match(tile1: Tile, tile2: Tile) {
 export const getStoreableTile = (tile: Tile): Tile => {
   let storeable = {
     ...tile,
+    bgColor: sanitizeColorValue(tile.bgColor) as number,
     preview_flatTop: '',
     preview_pointyTop: '',
-    symbol: tile.symbol ? { ...tile.symbol, base64: '' } : null,
+    symbol: tile.symbol
+      ? { ...tile.symbol, base64: '', color: sanitizeColorValue(tile.symbol.color) as number }
+      : null,
   }
 
   delete storeable.preview_flatTop
