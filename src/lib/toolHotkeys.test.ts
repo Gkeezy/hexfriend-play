@@ -1,6 +1,6 @@
 import { Tools } from '../types/toolData'
 import { getKeyboardShortcut, shortcuts } from './keyboardShortcuts'
-import { OVERLAY_HOTKEY, TOOLBAR_HOTKEYS, toolbarHotkeyAction, toolbarHotkeyFor } from './toolHotkeys'
+import { OVERLAY_HOTKEY, TOOLBAR_HOTKEYS, toolbarHotkeyAction, toolbarHotkeyCaption, toolbarHotkeyFor } from './toolHotkeys'
 
 function assert(cond: unknown, message: string) {
   if (!cond) throw new Error(message)
@@ -45,6 +45,15 @@ test('keyboard shortcut table matches toolbar hotkeys and lists fog as 6', () =>
   assert(!!overlay, 'overlay should keep a keyboard shortcut')
   assert(overlay!.keycode !== '6', 'overlay must not remain on 6')
   assert(overlay!.keycode === String(OVERLAY_HOTKEY), 'overlay shortcut should use the reserved extra digit')
+})
+
+test('toolbar captions are the number plus a one-word name', () => {
+  assert(
+    TOOLBAR_HOTKEYS.map((entry) => toolbarHotkeyCaption(entry.tool)).join('|') ===
+      '1 Terrain|2 Icon|3 Path|4 Text|5 Eraser|6 Fog',
+    'captions should be "1 Terrain" through "6 Fog"',
+  )
+  assert(toolbarHotkeyCaption(Tools.OVERLAY) === null, 'overlay should have no caption')
 })
 
 test('1-5 still select the original tools', () => {

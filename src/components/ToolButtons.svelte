@@ -10,7 +10,7 @@
   import { asset } from '../lib/base'
   import { store_selected_tool } from '../stores/tools'
   import { loading_texture } from '../stores'
-  import { toolbarHotkeyFor } from '../lib/toolHotkeys'
+  import { toolbarHotkeyCaption, toolbarHotkeyFor } from '../lib/toolHotkeys'
 
   import { tfield } from '../stores/tfield'
   import { tl } from '../stores/translation'
@@ -254,7 +254,8 @@
       // This little magic here means that when then overlay tool spawns in we can switch to it properly
       await tick()
 
-      let new_clip_path = `circle(1.25em at ${el_selected_button.offsetLeft + el_selected_button.offsetWidth / 2}px ${
+      const radius = Math.max(el_selected_button.offsetWidth, el_selected_button.offsetHeight) / 2
+      let new_clip_path = `circle(${radius}px at ${el_selected_button.offsetLeft + el_selected_button.offsetWidth / 2}px ${
         el_selected_button.offsetTop + el_selected_button.offsetHeight / 2
       }px)`
 
@@ -297,8 +298,8 @@
             $tfield.orientation == HexOrientation.POINTYTOP}
           style={`-webkit-mask: url(${asset('assets/img/tools/' + b.toolCode + '.svg')}) no-repeat center`}
         />
-        {#if toolbarHotkeyFor(b.toolCode)}
-          <span class="tool-hotkey">{toolbarHotkeyFor(b.toolCode)}</span>
+        {#if toolbarHotkeyCaption(b.toolCode)}
+          <span class="tool-hotkey">{toolbarHotkeyCaption(b.toolCode)}</span>
         {/if}
       </button>
     {/each}
@@ -322,8 +323,8 @@
             $tfield.orientation == HexOrientation.POINTYTOP}
           style={`-webkit-mask: url(${asset('assets/img/tools/' + b.toolCode + '.svg')}) no-repeat center`}
         />
-        {#if toolbarHotkeyFor(b.toolCode)}
-          <span class="tool-hotkey">{toolbarHotkeyFor(b.toolCode)}</span>
+        {#if toolbarHotkeyCaption(b.toolCode)}
+          <span class="tool-hotkey">{toolbarHotkeyCaption(b.toolCode)}</span>
         {/if}
       </button>
     {/each}
@@ -371,7 +372,10 @@
 
   .tool-button {
     height: 100%;
-    aspect-ratio: 1/1;
+    min-width: 2.5em;
+    width: auto;
+    padding: 0 0.2em;
+    box-sizing: border-box;
 
     position: relative;
 
@@ -389,16 +393,18 @@
   }
 
   .tool-icon {
-    width: 72%;
-    height: 72%;
+    width: 1.8em;
+    height: 1.8em;
+    flex-shrink: 0;
     transition-duration: 0.2s;
   }
 
   .tool-hotkey {
-    font-size: 0.6em;
+    font-size: 0.5em;
     line-height: 1;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0;
+    white-space: nowrap;
     pointer-events: none;
     user-select: none;
   }

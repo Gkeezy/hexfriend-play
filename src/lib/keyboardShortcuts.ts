@@ -23,7 +23,7 @@ export let shortcuts: shortcut_data[] = [
 		keycode: entry.key,
 		function: toolbarHotkeyAction(entry.tool),
 		tool: null,
-		display: `${entry.tool[0].toUpperCase()}${entry.tool.slice(1)} Tool`,
+		display: `${entry.name} Tool`,
 	})),
 	{ keycode: String(OVERLAY_HOTKEY), function: 'changeTool_overlay', tool: null, display: 'Overlay Tool' },
 
